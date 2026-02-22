@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 FIGURES_DIR = os.path.join(os.path.dirname(__file__), "output", "figures")
 
 
-def static_correlation(merged):
+def static_correlation(merged, prefix=""):
     """Tính ma trận tương quan Pearson."""
     corr_matrix = merged.corr(method="pearson")
 
@@ -40,10 +40,12 @@ def static_correlation(merged):
         ax=ax,
         annot_kws={"size": 14, "weight": "bold"},
     )
-    ax.set_title("Ma trận Tương quan Pearson\n(Gold - WTI - DXY)", fontsize=14, fontweight="bold")
+    title_suffix = f" [{prefix}]" if prefix else ""
+    ax.set_title(f"Ma trận Tương quan Pearson\n(Gold - WTI - DXY){title_suffix}", fontsize=14, fontweight="bold")
     plt.tight_layout()
 
-    path = os.path.join(FIGURES_DIR, "pearson_correlation_heatmap.png")
+    fname = f"{prefix}_pearson_correlation_heatmap.png" if prefix else "pearson_correlation_heatmap.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"   💾 Đã lưu: {path}")
@@ -51,7 +53,7 @@ def static_correlation(merged):
     return corr_matrix
 
 
-def rolling_correlation(merged, windows=[30, 60]):
+def rolling_correlation(merged, windows=[30, 60], prefix=""):
     """Tính rolling correlation giữa Gold-DXY và Gold-WTI."""
     fig, axes = plt.subplots(len(windows), 1, figsize=(14, 5 * len(windows)), sharex=True)
     if len(windows) == 1:
@@ -84,7 +86,8 @@ def rolling_correlation(merged, windows=[30, 60]):
     axes[-1].set_xlabel("Thời gian", fontsize=11)
     plt.tight_layout()
 
-    path = os.path.join(FIGURES_DIR, "rolling_correlation.png")
+    fname = f"{prefix}_rolling_correlation.png" if prefix else "rolling_correlation.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"\n📉 Rolling Correlation đã được tính và lưu: {path}")
@@ -92,7 +95,7 @@ def rolling_correlation(merged, windows=[30, 60]):
     return results
 
 
-def granger_causality(merged, maxlag=10):
+def granger_causality(merged, maxlag=10, prefix=""):
     """Kiểm tra Granger Causality: DXY/WTI → Gold."""
     print("\n🔍 Kiểm tra Granger Causality:")
     print("-" * 50)
@@ -157,7 +160,8 @@ def granger_causality(merged, maxlag=10):
             ax.grid(True, alpha=0.3, axis="y")
 
     plt.tight_layout()
-    path = os.path.join(FIGURES_DIR, "granger_causality.png")
+    fname = f"{prefix}_granger_causality.png" if prefix else "granger_causality.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"\n   💾 Biểu đồ Granger Causality: {path}")
@@ -165,7 +169,7 @@ def granger_causality(merged, maxlag=10):
     return results
 
 
-def run(merged):
+def run(merged, prefix=""):
     """Pipeline phân tích tương quan."""
     print("\n" + "=" * 60)
     print("📊 GIAI ĐOẠN 2: PHÂN TÍCH TƯƠNG QUAN NÂNG CAO")
@@ -173,9 +177,9 @@ def run(merged):
 
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
-    corr_matrix = static_correlation(merged)
-    rolling_results = rolling_correlation(merged)
-    granger_results = granger_causality(merged)
+    corr_matrix = static_correlation(merged, prefix=prefix)
+    rolling_results = rolling_correlation(merged, prefix=prefix)
+    granger_results = granger_causality(merged, prefix=prefix)
 
     return {
         "pearson": corr_matrix,

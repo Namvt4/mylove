@@ -31,7 +31,7 @@ COLORS = {
 }
 
 
-def plot_price_history(merged):
+def plot_price_history(merged, prefix=""):
     """Biểu đồ giá lịch sử 3 tài sản."""
     fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
 
@@ -61,14 +61,15 @@ def plot_price_history(merged):
     fig.suptitle("Giá Lịch sử: Gold / WTI / DXY", fontsize=15, fontweight="bold", y=1.02)
     plt.tight_layout()
 
-    path = os.path.join(FIGURES_DIR, "price_history.png")
+    fname = f"{prefix}_price_history.png" if prefix else "price_history.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"   💾 Price history chart: {path}")
     return path
 
 
-def plot_actual_vs_predicted(xgb_results, prophet_results):
+def plot_actual_vs_predicted(xgb_results, prophet_results, prefix=""):
     """Biểu đồ Actual vs Predicted cho cả hai mô hình."""
     fig, axes = plt.subplots(2, 1, figsize=(14, 10))
 
@@ -108,14 +109,15 @@ def plot_actual_vs_predicted(xgb_results, prophet_results):
 
     plt.tight_layout()
 
-    path = os.path.join(FIGURES_DIR, "actual_vs_predicted.png")
+    fname = f"{prefix}_actual_vs_predicted.png" if prefix else "actual_vs_predicted.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"   💾 Actual vs Predicted chart: {path}")
     return path
 
 
-def plot_feature_importance(xgb_results, top_n=15):
+def plot_feature_importance(xgb_results, top_n=15, prefix=""):
     """Biểu đồ Feature Importance từ XGBoost."""
     feat_imp = xgb_results["feature_importance"].head(top_n)
 
@@ -143,14 +145,15 @@ def plot_feature_importance(xgb_results, top_n=15):
 
     plt.tight_layout()
 
-    path = os.path.join(FIGURES_DIR, "feature_importance.png")
+    fname = f"{prefix}_feature_importance.png" if prefix else "feature_importance.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"   💾 Feature importance chart: {path}")
     return path
 
 
-def plot_model_comparison(df_metrics):
+def plot_model_comparison(df_metrics, prefix=""):
     """Biểu đồ so sánh metrics giữa hai mô hình."""
     # Chỉ lấy test metrics
     test_metrics = df_metrics[df_metrics["Model"].str.contains("Test")].copy()
@@ -184,14 +187,15 @@ def plot_model_comparison(df_metrics):
                  fontsize=15, fontweight="bold")
     plt.tight_layout()
 
-    path = os.path.join(FIGURES_DIR, "model_comparison.png")
+    fname = f"{prefix}_model_comparison.png" if prefix else "model_comparison.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"   💾 Model comparison chart: {path}")
     return path
 
 
-def plot_residuals(xgb_results, prophet_results):
+def plot_residuals(xgb_results, prophet_results, prefix=""):
     """Phân tích residuals của hai mô hình."""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
@@ -232,14 +236,15 @@ def plot_residuals(xgb_results, prophet_results):
     fig.suptitle("Phân tích Residuals", fontsize=15, fontweight="bold")
     plt.tight_layout()
 
-    path = os.path.join(FIGURES_DIR, "residuals_analysis.png")
+    fname = f"{prefix}_residuals_analysis.png" if prefix else "residuals_analysis.png"
+    path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"   💾 Residuals analysis chart: {path}")
     return path
 
 
-def run(merged, xgb_results, prophet_results, df_metrics):
+def run(merged, xgb_results, prophet_results, df_metrics, prefix=""):
     """Tạo tất cả visualizations."""
     print("\n" + "=" * 60)
     print("📈 GIAI ĐOẠN 5: VISUALIZATIONS")
@@ -247,10 +252,10 @@ def run(merged, xgb_results, prophet_results, df_metrics):
 
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
-    plot_price_history(merged)
-    plot_actual_vs_predicted(xgb_results, prophet_results)
-    plot_feature_importance(xgb_results)
-    plot_model_comparison(df_metrics)
-    plot_residuals(xgb_results, prophet_results)
+    plot_price_history(merged, prefix=prefix)
+    plot_actual_vs_predicted(xgb_results, prophet_results, prefix=prefix)
+    plot_feature_importance(xgb_results, prefix=prefix)
+    plot_model_comparison(df_metrics, prefix=prefix)
+    plot_residuals(xgb_results, prophet_results, prefix=prefix)
 
     print(f"\n✅ Tất cả biểu đồ đã được lưu vào: {FIGURES_DIR}")

@@ -1,16 +1,62 @@
 ======================================================================
-  DỰ ÁN ANTIGRAVITY: PHÂN TÍCH LIÊN THỊ TRƯỜNG & DỰ BÁO GIÁ VÀNG
+  DU AN ANTIGRAVITY: PHAN TICH LIEN THI TRUONG & DU BAO GIA VANG
+  SO SANH 2 GIAI DOAN: 2014-2019 vs 2020-2025
 ======================================================================
 
-1. TỔNG QUAN DỮ LIỆU
---------------------------------------------------
-   Số bản ghi: 1508
-   Khoảng thời gian: 2020-01-02 → 2025-12-30
-   Biến: Gold (GC=F), WTI (CL=F), DXY (DX-Y.NYB)
+======================================================================
+  GIAI DOAN: 2014-2019 (Pre-COVID)
+======================================================================
+   So ban ghi: 1506
+   Khoang thoi gian: 2014-01-02 -> 2019-12-30
 
-2. PHÂN TÍCH TƯƠNG QUAN
---------------------------------------------------
-   Ma trận Pearson:
+   Ma tran Pearson:
+Price    Gold     WTI     DXY
+Price                        
+Gold   1.0000  0.1976 -0.1123
+WTI    0.1976  1.0000 -0.8520
+DXY   -0.1123 -0.8520  1.0000
+
+   Granger Causality:
+   DXY → Gold: p=0.038177 (lag=7) -> CO
+   WTI → Gold: p=0.284415 (lag=2) -> KHONG
+
+   So sanh Mo hinh:
+          Model      MAE     RMSE  MAPE (%)
+XGBoost (Train)   0.3232   0.4100    0.0262
+Prophet (Train)  13.2405  16.8193    1.0710
+ XGBoost (Test)  54.2985  83.8816    3.6637
+ Prophet (Test) 208.8051 249.9288   14.6332
+
+   Tham so XGBoost toi uu:
+   learning_rate: 0.027773067172968367
+   n_estimators: 998
+   max_depth: 6
+   min_child_weight: 4
+   gamma: 0.7757067524758952
+   subsample: 0.6191890439754353
+   colsample_bytree: 0.9836351373969391
+   reg_alpha: 0.007772421045300479
+   reg_lambda: 3.1265684540171886e-07
+
+   Top 10 Features:
+   Gold_lag_1                     0.2748
+   Gold_MA_5                      0.2616
+   Gold_MAX_5                     0.1930
+   Gold_MIN_5                     0.1264
+   Gold_MAX_10                    0.1154
+   Gold_DXY_ratio                 0.0044
+   Gold_return_5d                 0.0036
+   Gold_return_1d                 0.0035
+   quarter                        0.0027
+   Gold_MAX_21                    0.0025
+
+======================================================================
+  GIAI DOAN: 2020-2025 (Post-COVID)
+======================================================================
+   So ban ghi: 1508
+   Khoang thoi gian: 2020-01-02 -> 2025-12-30
+
+   Ma tran Pearson:
 Price    Gold     WTI     DXY
 Price                        
 Gold   1.0000 -0.0728  0.1014
@@ -18,42 +64,63 @@ WTI   -0.0728  1.0000  0.4654
 DXY    0.1014  0.4654  1.0000
 
    Granger Causality:
-   DXY → Gold: p=0.084520 (lag=4) → KHÔNG nhân quả
-   WTI → Gold: p=0.033291 (lag=2) → CÓ nhân quả
+   DXY → Gold: p=0.084520 (lag=4) -> KHONG
+   WTI → Gold: p=0.033291 (lag=2) -> CO
 
-3. SO SÁNH MÔ HÌNH
---------------------------------------------------
+   So sanh Mo hinh:
           Model      MAE     RMSE  MAPE (%)
-XGBoost (Train)   1.0445   1.3525    0.0551
+XGBoost (Train)   0.2816   0.3606    0.0149
 Prophet (Train)  22.5764  29.1700    1.1977
- XGBoost (Test) 642.9423 822.0274   17.4729
+ XGBoost (Test) 640.2807 813.6560   17.4389
  Prophet (Test) 255.0142 345.2025    7.0301
 
-4. THAM SỐ TỐI ƯU XGBOOST
---------------------------------------------------
-   learning_rate: 0.2957982223709949
-   n_estimators: 632
+   Tham so XGBoost toi uu:
+   learning_rate: 0.18698835566063923
+   n_estimators: 182
    max_depth: 6
-   min_child_weight: 5
-   gamma: 0.9834243277718218
-   subsample: 0.7084658035238287
-   colsample_bytree: 0.9464959288462147
-   reg_alpha: 0.12209100800360197
-   reg_lambda: 0.0024012056527141254
+   min_child_weight: 4
+   gamma: 0.0179425086518811
+   subsample: 0.694283619740919
+   colsample_bytree: 0.8062074011838145
+   reg_alpha: 0.0005995486376599362
+   reg_lambda: 3.489290918815825e-05
 
-5. TOP 10 FEATURES QUAN TRỌNG NHẤT (XGBOOST)
---------------------------------------------------
-   Gold_MAX_21                    0.6028
-   Gold_MA_10                     0.1872
-   Gold_lag_1                     0.1081
-   Gold_MA_5                      0.0317
-   Gold_MA_21                     0.0291
-   Gold_MIN_5                     0.0134
-   Gold_MAX_5                     0.0094
-   Gold_MAX_10                    0.0068
-   Gold_DXY_ratio                 0.0037
-   Gold_lag_3                     0.0021
+   Top 10 Features:
+   Gold_MAX_21                    0.6802
+   Gold_lag_1                     0.1578
+   Gold_MA_5                      0.0639
+   Gold_MA_21                     0.0455
+   Gold_MIN_5                     0.0216
+   Gold_MAX_5                     0.0071
+   Gold_DXY_ratio                 0.0058
+   Gold_MAX_10                    0.0036
+   Gold_lag_21                    0.0023
+   Gold_lag_5                     0.0022
 
 ======================================================================
-  Ghi chú: Tài liệu này phục vụ cho mục đích học thuật và nghiên cứu
+  SO SANH LIEN GIAI DOAN
+======================================================================
+
+  Tuong quan Pearson:
+      Pair  2014-2019  2020-2025   Change
+Gold ↔ WTI     0.1976    -0.0728 ↓ 0.2704
+Gold ↔ DXY    -0.1123     0.1014 ↑ 0.2137
+ WTI ↔ DXY    -0.8520     0.4654 ↑ 1.3174
+
+  Granger Causality:
+  Relation 2014-2019 p-val 2014-2019 2020-2025 p-val 2020-2025
+DXY → Gold        0.038177        CÓ        0.084520     KHÔNG
+WTI → Gold        0.284415     KHÔNG        0.033291        CÓ
+
+  Hieu suat Mo hinh (Test Set):
+  Model   Metric  2014-2019  2020-2025             Change
+XGBoost      MAE    54.2985   640.2807 ↑ Tệ hơn (1079.2%)
+XGBoost     RMSE    83.8816   813.6560  ↑ Tệ hơn (870.0%)
+XGBoost MAPE (%)     3.6637    17.4389  ↑ Tệ hơn (376.0%)
+Prophet      MAE   208.8051   255.0142   ↑ Tệ hơn (22.1%)
+Prophet     RMSE   249.9288   345.2025   ↑ Tệ hơn (38.1%)
+Prophet MAPE (%)    14.6332     7.0301  ↓ Tốt hơn (52.0%)
+
+======================================================================
+  Ghi chu: Tai lieu nay phuc vu cho muc dich hoc thuat va nghien cuu
 ======================================================================

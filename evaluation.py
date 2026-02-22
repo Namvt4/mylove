@@ -153,3 +153,99 @@ def generate_report(merged, corr_results, xgb_results, prophet_results, df_metri
     print(f"\n📝 Báo cáo đã được lưu: {report_path}")
 
     return report_path, report
+
+
+def _format_period_section(period_name, merged, corr_results, xgb_results, df_metrics):
+    """Helper: tạo section báo cáo cho một giai đoạn."""
+    lines = []
+    lines.append(f"\n{'='*70}")
+    lines.append(f"  GIAI DOAN: {period_name}")
+    lines.append(f"{'='*70}")
+    lines.append(f"   So ban ghi: {len(merged)}")
+    lines.append(f"   Khoang thoi gian: {merged.index[0].date()} -> {merged.index[-1].date()}")
+    lines.append("")
+
+    # Pearson
+    lines.append("   Ma tran Pearson:")
+    lines.append(corr_results["pearson"].round(4).to_string())
+    lines.append("")
+
+    # Granger
+    if "granger" in corr_results:
+        lines.append("   Granger Causality:")
+        for name, res in corr_results["granger"].items():
+            if "best_pvalue" in res:
+                sig = "CO" if res["significant"] else "KHONG"
+                lines.append(f"   {name}: p={res['best_pvalue']:.6f} (lag={res['best_lag']}) -> {sig}")
+    lines.append("")
+
+    # Metrics
+    lines.append("   So sanh Mo hinh:")
+    lines.append(df_metrics.to_string(index=False))
+    lines.append("")
+
+    # XGBoost params
+    lines.append("   Tham so XGBoost toi uu:")
+    for k, v in xgb_results["best_params"].items():
+        lines.append(f"   {k}: {v}")
+    lines.append("")
+
+    # Feature importance
+    lines.append("   Top 10 Features:")
+    for _, row in xgb_results["feature_importance"].head(10).iterrows():
+        lines.append(f"   {row['Feature']:30s} {row['Importance']:.4f}")
+
+    return lines
+
+
+def generate_report_multi(results_old, results_new, comparison):
+    """Tao bao cao tong hop cho ca hai giai doan."""
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    report_path = os.path.join(output_dir, "report.txt")
+
+    lines = []
+    lines.append("=" * 70)
+    lines.append("  DU AN ANTIGRAVITY: PHAN TICH LIEN THI TRUONG & DU BAO GIA VANG")
+    lines.append("  SO SANH 2 GIAI DOAN: 2014-2019 vs 2020-2025")
+    lines.append("=" * 70)
+
+    # Period 1
+    lines.extend(_format_period_section(
+        "2014-2019 (Pre-COVID)",
+        results_old["merged"], results_old["corr_results"],
+        results_old["xgb_results"], results_old["df_metrics"],
+    ))
+
+    # Period 2
+    lines.extend(_format_period_section(
+        "2020-2025 (Post-COVID)",
+        results_new["merged"], results_new["corr_results"],
+        results_new["xgb_results"], results_new["df_metrics"],
+    ))
+
+    # Cross-period comparison
+    lines.append(f"\n{'='*70}")
+    lines.append("  SO SANH LIEN GIAI DOAN")
+    lines.append(f"{'='*70}")
+    lines.append("")
+    lines.append("  Tuong quan Pearson:")
+    lines.append(comparison["correlation_comparison"].to_string(index=False))
+    lines.append("")
+    lines.append("  Granger Causality:")
+    lines.append(comparison["granger_comparison"].to_string(index=False))
+    lines.append("")
+    lines.append("  Hieu suat Mo hinh (Test Set):")
+    lines.append(comparison["model_comparison"].to_string(index=False))
+    lines.append("")
+    lines.append("=" * 70)
+    lines.append("  Ghi chu: Tai lieu nay phuc vu cho muc dich hoc thuat va nghien cuu")
+    lines.append("=" * 70)
+
+    report = "\n".join(lines)
+
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write(report)
+
+    print(f"\n  Bao cao da duoc luu: {report_path}")
+
+    return report_path, report

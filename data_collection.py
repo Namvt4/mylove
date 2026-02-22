@@ -87,13 +87,13 @@ def save_data(merged, df_prophet):
     return merged_path, prophet_path
 
 
-def run():
+def run(start="2020-01-01", end="2025-12-31"):
     """Pipeline thu thập & tiền xử lý dữ liệu."""
     print("=" * 60)
     print("📥 GIAI ĐOẠN 1: THU THẬP & TIỀN XỬ LÝ DỮ LIỆU")
     print("=" * 60)
 
-    frames = fetch_data()
+    frames = fetch_data(start=start, end=end)
     merged = preprocess(frames)
     df_prophet = prepare_prophet_format(merged)
     save_data(merged, df_prophet)

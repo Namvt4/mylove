@@ -2,13 +2,11 @@
 Dự án Antigravity: Phân tích Liên thị trường & Dự báo Giá Vàng
 ================================================================
 
-Pipeline chính chạy tuần tự:
-1. Thu thập dữ liệu (Yahoo Finance)
-2. Phân tích tương quan (Pearson, Rolling, Granger)
-3. XGBoost training (+ Optuna optimization)
-4. Prophet training (+ Regressors)
-5. Evaluation & Comparison
-6. Visualization & Report
+Pipeline chính chạy tuần tự cho HAI giai đoạn:
+  - Giai đoạn 1: 2014-2019 (Pre-COVID)
+  - Giai đoạn 2: 2020-2025 (Post-COVID)
+
+Sau đó so sánh liên giai đoạn.
 
 Tác giả: Dự án Antigravity
 Ghi chú: Phục vụ mục đích học thuật và nghiên cứu
@@ -21,7 +19,6 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-# Thêm thư mục dự án vào path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import data_collection
@@ -30,65 +27,97 @@ import model_xgboost
 import model_prophet
 import evaluation
 import visualizations
+import period_comparison
+
+FIGURES_DIR = os.path.join(os.path.dirname(__file__), "output", "figures")
+
+
+def run_period(period_name, start, end):
+    """Chạy toàn bộ pipeline cho một giai đoạn."""
+    print("\n" + "#" * 60)
+    print(f"#  GIAI ĐOẠN: {period_name} ({start} → {end})")
+    print("#" * 60)
+
+    # 1. Data
+    merged, df_prophet = data_collection.run(start=start, end=end)
+
+    # 2. Correlation
+    corr_results = correlation_analysis.run(merged, prefix=period_name)
+
+    # 3. XGBoost
+    xgb_results = model_xgboost.run(merged)
+
+    # 4. Prophet
+    prophet_results = model_prophet.run(df_prophet)
+
+    # 5. Evaluation
+    df_metrics, all_metrics = evaluation.compare_models(xgb_results, prophet_results)
+
+    # 6. Visualizations
+    visualizations.run(merged, xgb_results, prophet_results, df_metrics, prefix=period_name)
+
+    return {
+        "merged": merged,
+        "df_prophet": df_prophet,
+        "corr_results": corr_results,
+        "xgb_results": xgb_results,
+        "prophet_results": prophet_results,
+        "df_metrics": df_metrics,
+        "all_metrics": all_metrics,
+    }
 
 
 def main():
     start_time = time.time()
 
-    print("╔" + "═" * 58 + "╗")
-    print("║  DỰ ÁN ANTIGRAVITY                                      ║")
-    print("║  Phân tích Liên thị trường & Dự báo Giá Vàng            ║")
-    print("║  Gold × WTI × DXY | XGBoost vs Prophet                  ║")
-    print("╚" + "═" * 58 + "╝")
+    print("+" + "=" * 58 + "+")
+    print("|  DU AN ANTIGRAVITY                                       |")
+    print("|  Phan tich Lien thi truong & Du bao Gia Vang             |")
+    print("|  Gold x WTI x DXY | XGBoost vs Prophet                  |")
+    print("|  So sanh 2 giai doan: 2014-2019 vs 2020-2025             |")
+    print("+" + "=" * 58 + "+")
 
     # ============================================================
-    # GIAI ĐOẠN 1: Thu thập & Tiền xử lý dữ liệu
+    # GIAI ĐOẠN 1: 2014-2019 (Pre-COVID)
     # ============================================================
-    merged, df_prophet = data_collection.run()
+    results_old = run_period("2014_2019", "2014-01-01", "2019-12-31")
 
     # ============================================================
-    # GIAI ĐOẠN 2: Phân tích tương quan
+    # GIAI ĐOẠN 2: 2020-2025 (Post-COVID)
     # ============================================================
-    corr_results = correlation_analysis.run(merged)
+    results_new = run_period("2020_2025", "2020-01-01", "2025-12-31")
 
     # ============================================================
-    # GIAI ĐOẠN 3A: XGBoost + Optuna
+    # SO SÁNH LIÊN GIAI ĐOẠN
     # ============================================================
-    xgb_results = model_xgboost.run(merged)
+    comparison = period_comparison.run(
+        corr_old=results_old["corr_results"],
+        corr_new=results_new["corr_results"],
+        metrics_old=results_old["all_metrics"],
+        metrics_new=results_new["all_metrics"],
+        merged_old=results_old["merged"],
+        merged_new=results_new["merged"],
+    )
 
     # ============================================================
-    # GIAI ĐOẠN 3B: Prophet
+    # BÁO CÁO TỔNG HỢP
     # ============================================================
-    prophet_results = model_prophet.run(df_prophet)
-
-    # ============================================================
-    # GIAI ĐOẠN 4: Đánh giá & So sánh
-    # ============================================================
-    df_metrics, all_metrics = evaluation.compare_models(xgb_results, prophet_results)
-
-    # ============================================================
-    # GIAI ĐOẠN 5: Visualizations
-    # ============================================================
-    visualizations.run(merged, xgb_results, prophet_results, df_metrics)
-
-    # ============================================================
-    # GIAI ĐOẠN 6: Báo cáo
-    # ============================================================
-    report_path, report = evaluation.generate_report(
-        merged, corr_results, xgb_results, prophet_results, df_metrics
+    evaluation.generate_report_multi(
+        results_old=results_old,
+        results_new=results_new,
+        comparison=comparison,
     )
 
     # ============================================================
     # TỔNG KẾT
     # ============================================================
     elapsed = time.time() - start_time
-    print("\n" + "╔" + "═" * 58 + "╗")
-    print("║  ✅ HOÀN THÀNH!                                          ║")
-    print("╚" + "═" * 58 + "╝")
-    print(f"\n⏱️  Thời gian chạy: {elapsed:.1f} giây")
-    print(f"📁 Kết quả trong: {os.path.join(os.path.dirname(__file__), 'output')}")
-    print(f"📊 Biểu đồ:  output/figures/")
-    print(f"📝 Báo cáo:  {report_path}")
+    print("\n+" + "=" * 58 + "+")
+    print("|  HOAN THANH!                                             |")
+    print("+" + "=" * 58 + "+")
+    print(f"\n  Thoi gian chay: {elapsed:.1f} giay")
+    print(f"  Ket qua trong: {os.path.join(os.path.dirname(__file__), 'output')}")
+    print(f"  Bieu do:  output/figures/")
     print(f"\n{'=' * 60}")
 
 
