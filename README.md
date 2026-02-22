@@ -263,4 +263,3 @@ graph TD
 
 ---
 
-*Dự án Antigravity — Phục vụ mục đích học thuật và nghiên cứu.*
